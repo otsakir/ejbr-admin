@@ -75,11 +75,34 @@ function setDebounce(f, timeout) {
 	{#await rooms}
 		Loading rooms...
 	{:then rooms}
-		<ul>
-		{#each rooms as room (room.jid)}
-			<li><a href={"/rooms/"+room.jid}>{room.jid}</a>, {room.public=="true" ? "public": "private"} ({room.participants})</li>
-		{/each}
-		</ul>
+		<div class="flex flex-col">
+		  <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+		    <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
+		      <div class="overflow-hidden">
+		        <table class="min-w-full text-left text-sm font-light text-surface dark:text-white">
+			          <thead
+			            class="border-b border-neutral-200 font-medium dark:border-white/10">
+			            <tr>
+			              <th scope="col" class="px-6 py-3">Room</th>
+			              <th scope="col" class="px-6 py-3">Public</th>
+			              <th scope="col" class="px-6 py-3">CRAP</th>
+			            </tr>
+			          </thead>
+			          <tbody>
+						{#each rooms as room (room.jid)}
+							<!--<li><a href={"/rooms/"+{room.jid}</a>, {room.public=="true" ? "public": "private"} ({room.participants})</li>-->
+							<tr class="border-b border-neutral-200 dark:border-white/10">
+				              <td class="whitespace-nowrap px-6 py-3"><a href={"/rooms/"+room.jid}>{room.jid}</a></td>
+				              <td class="whitespace-nowrap px-6 py-3">{room.public=="true" ? "yes": "no"}</td>
+				              <td class="whitespace-nowrap px-6 py-3">CRAP</td>
+				            </tr>
+						{/each}
+					  </tbody>
+		        </table>
+		      </div>
+		    </div>
+		  </div>
+		</div>
 	{:catch error}
 		<p>error logging in: {error}</p>
 	{/await}
