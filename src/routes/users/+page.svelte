@@ -2,11 +2,12 @@
 
 import {onMount} from 'svelte';
 import {makeFetch} from '../../lib/network.js'
+import {config} from '../../stores/UtilStore.js'
 
 let users = '';
 
 function getUsers() {
-	users = makeFetch('http://localhost/api/registered_users', {}, {host: "chat.retalia.org"});
+	users = makeFetch('/api/registered_users', {}, {host: $config.ejabberdVirtualHost});
 }
 
 onMount(() => {
@@ -16,45 +17,50 @@ onMount(() => {
 
 </script>
 
+<div class="container mx-auto">
 
-<h3>Registered Users</h3>
+	<h3 class="text-xl py-2">Registered Users</h3>
 
-
-{#await users}
-	Loading registered users...
-{:then users}
-	<div class="flex flex-col">
-	  <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-	    <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-	      <div class="overflow-hidden">
-	        <table class="min-w-full text-left text-sm font-light text-surface dark:text-white">
-		          <thead
-		            class="border-b border-neutral-200 font-medium dark:border-white/10">
-		            <tr>
-		              <th scope="col" class="px-6 py-3">Username</th>
-		              <th scope="col" class="px-6 py-3">Last</th>
-		              <th scope="col" class="px-6 py-3">Handle</th>
-		            </tr>
-		          </thead>
-		          <tbody>
-					{#each users as user}
-						<tr class="border-b border-neutral-200 dark:border-white/10">
-			              <td class="whitespace-nowrap px-6 py-3">{user}</td>
-			              <td class="whitespace-nowrap px-6 py-3">Otto</td>
-			              <td class="whitespace-nowrap px-6 py-3">@mdo</td>
-			            </tr>
-					{/each}
-				</tbody>
-	        </table>
-	      </div>
-	    </div>
-	  </div>
+	<div class="flex flex-row-reverse my-4">
+		<button on:click={getUsers} class="btn">Reload</button>
 	</div>
 
-{:catch error}
-	<p>error logging in: {error}</p>
-{/await}
+	{#await users}
+		Loading registered users...
+	{:then users}
 
-<p>
-	<button on:click={getUsers}>Reload</button> <br/>
-</p>
+		<div class="overflow-x-auto">
+		  <table class="table">
+		    <!-- head -->
+		    <thead>
+		      <tr>
+		        <th>Username</th>
+		        <th>Full name</th>
+		        <th>Role</th>
+		      </tr>
+		    </thead>
+		    <tbody>
+
+		    	{#each users as user, i}
+
+				      <!-- row 1 -->
+				      <tr>
+				        <td>{user}</td>
+				        <td>Quality Control Specialist</td>
+				        <td>Blue</td>
+				      </tr>
+
+				{/each}
+		    </tbody>
+		  </table>
+		</div>
+
+	{:catch error}
+	<p>error logging in: {error}</p>
+	{/await}
+
+
+</div>
+
+
+
