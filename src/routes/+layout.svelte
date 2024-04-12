@@ -19,7 +19,7 @@
 </script>
 
 
-<div class="navbar bg-base-100">
+<div class="navbar bg-base-100 bg-neutral-content">
   <div class="flex-1">
     <a href="/" class="btn btn-ghost text-xl">Chat Admin</a>
   </div>
@@ -30,13 +30,6 @@
     </ul>
   </div>
 
-<!--
-  <div role="tablist" class="tabs tabs-boxed">
-    <a role="tab" class="tab">Tab 1</a>
-    <a role="tab" class="tab tab-active">Tab 2</a>
-    <a role="tab" class="tab">Tab 3</a>
-  </div>  
--->
 
 </div>
 

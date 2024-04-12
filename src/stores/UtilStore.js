@@ -7,7 +7,9 @@ export const user = writable({
 });
 
 export const config = writable({
-	mucHost: "localhost",	// conference.chat.retalia.org
-	ejabberdVirtualHost: "localhost" 	// chat.retalia.org
+	//mucHost: "localhost",	
+	mucHost: "conference.chat.retalia.org",
+	//ejabberdVirtualHost: "localhost" 	// chat.retalia.org
+	ejabberdVirtualHost: "chat.retalia.org"
 });
 

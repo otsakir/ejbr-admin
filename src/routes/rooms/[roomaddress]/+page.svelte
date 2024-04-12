@@ -3,24 +3,43 @@
 import {makeFetch} from '../../../lib/network.js'
 import {onMount} from 'svelte'
 import {config} from '../../../stores/UtilStore.js'
+import * as utils from '$lib/utils.js'
 
 export let data;
-$: room_name = roomName();
+$: room_name = utils.roomFirstName(data.roomaddress);
 
 export let params = {};
 let room_options ={};
 let room_options_copy = {};
 let room_options_promise = {};
 let affiliations = '';
+let users = '';
+let selectedUser = '';
 
 
 
-function roomName() {
-	let parts = data.roomaddress.split("@"); 
-	if (parts.length > 1)
-		return parts[0];
-	return data.roomaddress;
+function getUsers() {
+	users = makeFetch('/api/registered_users', {}, {host: $config.ejabberdVirtualHost});
+	users.then((userData)=>{
+		if (userData.length > 0) selectedUser = userData[0];
+	});
 }
+
+function addMember(member) {
+
+	makeFetch('/api/set_room_affiliation', {}, {name: room_name, jid: member+'@'+$config.ejabberdVirtualHost, affiliation: 'member', service: $config.mucHost} )
+	.then(()=>{
+		getRoomAffiliations();
+	});
+}
+
+
+// function roomFirstName(fullname) {
+// 	let parts = fullname.split("@"); 
+// 	if (parts.length > 1)
+// 		return parts[0];
+// 	return fullname;
+// }
 
 
 // convert string "true"/"false" values to boolean true/false. Return result
@@ -74,6 +93,7 @@ function updateRoomOption(option, value) {
 function reload() {
 	getRoomOptions();
 	getRoomAffiliations();	
+	getUsers();
 }
 
 onMount(() => {
@@ -97,53 +117,97 @@ function roleSelectChanged(aff) {
 
 <div class="container mx-auto">
 
-	<p>Room name is {data.roomaddress}</p>
+	<!-- breadcrumbs -->
+	<div class="text-sm breadcrumbs">
+	  <ul>
+	    <li><a href="/">Home</a></li>  
+	    <li><a href="/rooms">Rooms</a></li>
+	    <li>{data.roomaddress}</li>
+	  </ul>
+	</div>
 
+	<div class="flex gap-8 justify-between">
+		<div>
+			<h1 class="text-3xl py-4 font-semibold">{data.roomaddress}</h1>
+		</div>
 
-	<div class="flex flex-row-reverse my-4">
-		<button on:click={reload} class="btn">Reload</button>
+		<div class="flex flex-row-reverse my-4">
+			<button on:click={reload} class="btn">Reload</button>
+		</div>		
+	</div>
+
+	
+	<!-- members  heading -->
+	<div class="mb-8"> 
+		<h3 class="text-2xl font-bold pt-8">Μembers</h3>
+		<hr class="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700">
 	</div>
 
 
+	<!-- add members -->
+	<div class="flex justify-between gap-2 mb-4"> 
+		<select bind:value={selectedUser} class="select select-bordered w-full max-w-xs">
+			{#await users}
+				<option disabled selected>No users</option>
+			{:then users}
+				{#each users as user}
+					<option value={user}>{user}</option>
+				{/each}
+			<!--{/await}-->
+			{/await}
+		</select>
+		<button disabled={selectedUser==''} class="btn btn-square disabled:opacity-30" on:click={addMember(selectedUser)}>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+		</button>
 
-	<h3 class="text-xl py-2">Room members</h3>
+	</div>
+
+
+	<!-- members list -->
 	{#await affiliations}
 		Loading affiliations...
 	{:then affiliations}
-
 		<div class="overflow-x-auto">
 		  <table class="table">
 		    <!-- head -->
 		    <thead>
 		      <tr>
 		        <th>Userame</th>
-		        <th>Role</th>
+		        <th class="flex flex-row-reverse">Role for this room</th>
 		      </tr>
 		    </thead>
 		    <tbody>
-		    		{#each affiliations as aff (aff.username)}
-				      <tr>
-				        <td>{aff.username}</td>
-				        <td>
-					        <select bind:value={aff.affiliation} on:change={roleSelectChanged(aff)}  class="select w-full max-w-xs">
-							  <option value="owner">owner</option>
-							  <option value="member">member</option>
-							  <option value="none">none (just guest)</option>
-							</select>
-						</td>
-				      </tr>
-					{/each}
+		    		{#if affiliations.length > 0}
+			    		{#each affiliations as aff (aff.username)}
+					      <tr>
+					        <td>{aff.username}</td>
+					        <td class="flex flex-row-reverse">
+						        <select bind:value={aff.affiliation} on:change={roleSelectChanged(aff)}  class="select w-full max-w-xs">
+								  <option value="owner">owner</option>
+								  <option value="member">member</option>
+								  <option value="none">none (just guest)</option>
+								</select>
+							</td>
+					      </tr>
+						{/each}
+					{:else}
+						<tr><td>No members</td></tr>
+					{/if}
 		    </tbody>
 		  </table>
 		</div>
-
 	{:catch error}
 		Error getting affiliations
 	{/await}
 
 
+	<!-- options heading -->
+	<div class="mb-8"> 
+		<h3 class="text-2xl font-bold pt-8">Options</h3>
+		<hr class="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700">
+	</div>
 
-	<h3 class="text-xl py-2">Room options</h3>
+	<!-- options table -->
 	{#await room_options_promise}
 		Loading room details...
 	{:then}
